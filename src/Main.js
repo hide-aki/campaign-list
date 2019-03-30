@@ -32,14 +32,11 @@ class App extends Component {
         contentEditable
         suppressContentEditableWarning
         onBlur={e => {
-          // const updatedAt = moment().format('ddd, MMM Do YYYY, h:mm a');
-          // const index = cellInfo.index;
           const name = e.target.innerHTML;
           this.toggle({ ...cellInfo, name });
-          // dispatch(updateCampaignData({ index, newRecord: { ...data[index], name, updatedAt } }));
         }}
         dangerouslySetInnerHTML={{
-          __html: this.props.data[cellInfo.index][cellInfo.column.id],
+          __html: !this.state.cellInfo ? this.props.data[cellInfo.index][cellInfo.column.id] : null,
         }}
       />
     );
@@ -72,9 +69,23 @@ class App extends Component {
     this.toggle();
   };
 
+  handleUpdateCancel = () => {
+    const { cellInfo } = this.state;
+    const { dispatch, data } = this.props;
+    const { index } = cellInfo;
+
+    console.log('TCL: handleUpdateCancel -> { index, newRecord: { ...data[index] } }', {
+      index,
+      newRecord: { ...data[index] },
+    });
+    dispatch(updateCampaignData({ index, newRecord: { ...data[index] } }));
+    this.toggle();
+  };
+
   render() {
     const { data } = this.props;
     const { selected, modal, cellInfo } = this.state;
+    console.log('TCL: render -> cellInfo', cellInfo);
     const columns = [
       {
         Header: 'Campaign Name',
@@ -124,7 +135,7 @@ class App extends Component {
                 Update
               </Button>
             )}{' '}
-            <Button color="secondary" onClick={this.toggle}>
+            <Button color="secondary" onClick={!cellInfo ? this.toggle : this.handleUpdateCancel}>
               Cancel
             </Button>
           </ModalFooter>
