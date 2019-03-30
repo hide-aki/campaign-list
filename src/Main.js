@@ -14,7 +14,7 @@ import { Button, Modal, ModalHeader, ModalFooter } from 'reactstrap';
 const SelectTreeTable = selectTableHOC(ReactTable);
 
 class App extends Component {
-  state = { selected: [], modal: false, cellInfo: null };
+  state = { selected: [], modal: false };
 
   componentDidMount = () => {
     const { dispatch } = this.props;
@@ -32,11 +32,13 @@ class App extends Component {
         contentEditable
         suppressContentEditableWarning
         onBlur={e => {
+          const updatedAt = moment().format('ddd, MMM Do YYYY, h:mm a');
+          const index = cellInfo.index;
           const name = e.target.innerHTML;
-          this.toggle({ ...cellInfo, name });
+          dispatch(updateCampaignData({ index, newRecord: { ...data[index], name, updatedAt } }));
         }}
         dangerouslySetInnerHTML={{
-          __html: !this.state.cellInfo ? this.props.data[cellInfo.index][cellInfo.column.id] : null,
+          __html: this.props.data[cellInfo.index][cellInfo.column.id],
         }}
       />
     );
@@ -57,35 +59,11 @@ class App extends Component {
     this.toggle();
   };
 
-  toggle = cellInfo => this.setState(prevState => ({ modal: !prevState.modal, cellInfo }));
-
-  update = () => {
-    const { dispatch, data } = this.props;
-    const { cellInfo } = this.state;
-    const updatedAt = moment().format('ddd, MMM Do YYYY, h:mm a');
-    const { index, name } = cellInfo;
-
-    dispatch(updateCampaignData({ index, newRecord: { ...data[index], name, updatedAt } }));
-    this.toggle();
-  };
-
-  handleUpdateCancel = () => {
-    const { cellInfo } = this.state;
-    const { dispatch, data } = this.props;
-    const { index } = cellInfo;
-
-    console.log('TCL: handleUpdateCancel -> { index, newRecord: { ...data[index] } }', {
-      index,
-      newRecord: { ...data[index] },
-    });
-    dispatch(updateCampaignData({ index, newRecord: { ...data[index] } }));
-    this.toggle();
-  };
+  toggle = () => this.setState(prevState => ({ modal: !prevState.modal }));
 
   render() {
     const { data } = this.props;
-    const { selected, modal, cellInfo } = this.state;
-    console.log('TCL: render -> cellInfo', cellInfo);
+    const { selected, modal } = this.state;
     const columns = [
       {
         Header: 'Campaign Name',
@@ -125,17 +103,10 @@ class App extends Component {
           <ModalHeader toggle={this.toggle}>Do you wnat to delete selected items?</ModalHeader>
 
           <ModalFooter>
-            {!cellInfo && (
-              <Button color="danger" onClick={this.deleteSelected}>
-                Delete
-              </Button>
-            )}
-            {cellInfo && (
-              <Button color="primary" onClick={this.update}>
-                Update
-              </Button>
-            )}{' '}
-            <Button color="secondary" onClick={!cellInfo ? this.toggle : this.handleUpdateCancel}>
+            <Button color="danger" onClick={this.deleteSelected}>
+              Delete
+            </Button>{' '}
+            <Button color="secondary" onClick={this.toggle}>
               Cancel
             </Button>
           </ModalFooter>
